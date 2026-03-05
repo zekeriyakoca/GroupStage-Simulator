@@ -26,11 +26,26 @@ public class StandingsCalculator : IStandingsCalculator
 
     private static List<Standing> Sort(List<Standing> standings, IReadOnlyList<MatchResult> matches)
     {
-        return standings
-            .OrderByDescending(s => s.Points)
-            .ThenByDescending(s => s.GoalDifference)
-            .ThenByDescending(s => s.GoalsFor)
-            .ThenBy(s => s.GoalsAgainst)
-            .ToList();
+        standings.Sort((x, y) => CompareStandings(x, y, matches));
+        return standings;
+    }
+
+    private static int CompareStandings(Standing x, Standing y, IReadOnlyList<MatchResult> matches)
+    {
+        if (x.Points != y.Points)                 return y.Points.CompareTo(x.Points);
+        if (x.GoalDifference != y.GoalDifference) return y.GoalDifference.CompareTo(x.GoalDifference);
+        if (x.GoalsFor != y.GoalsFor)             return y.GoalsFor.CompareTo(x.GoalsFor);
+        if (x.GoalsAgainst != y.GoalsAgainst)     return x.GoalsAgainst.CompareTo(y.GoalsAgainst);
+
+        var h2h = matches.FirstOrDefault(m =>
+            (m.Home.Id == x.Team.Id && m.Away.Id == y.Team.Id) ||
+            (m.Home.Id == y.Team.Id && m.Away.Id == x.Team.Id));
+
+        if (h2h is null) return 0;
+
+        // negative = x ranks higher, positive = y ranks higher
+        return h2h.Home.Id == x.Team.Id
+            ? h2h.AwayGoals.CompareTo(h2h.HomeGoals)  // x is home: home win → x ranks higher
+            : h2h.HomeGoals.CompareTo(h2h.AwayGoals); // x is away: away win → x ranks higher
     }
 }

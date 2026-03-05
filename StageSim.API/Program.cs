@@ -6,7 +6,6 @@ using StageSim.API.Middlewares;
 using StageSim.Domain;
 using StageSim.Domain.Interfaces;
 using StageSim.Domain.Services;
-using StageSim.Infrastructure;
 using StageSim.Infrastructure.Random;
 using StageSim.Infrastructure.Simulation;
 
@@ -50,7 +49,10 @@ app.MapPost("/groups/simulate", (
         .ToList();
 
     var result = simulator.Simulate(teams, config);
-    return Results.Ok(SimulationResultMapper.ToResponse(result));
+    if (!result.IsSuccess)
+        return Results.BadRequest(result.Error);
+
+    return Results.Ok(SimulationResultMapper.ToResponse(result.Value!));
 })
 .WithName("SimulateGroup");
 

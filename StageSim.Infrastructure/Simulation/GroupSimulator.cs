@@ -1,8 +1,7 @@
 using StageSim.Domain;
-using StageSim.Domain.Exceptions;
 using StageSim.Domain.Interfaces;
 
-namespace StageSim.Infrastructure;
+namespace StageSim.Infrastructure.Simulation;
 
 public class GroupSimulator(
     IScheduleGenerator scheduleGenerator,
@@ -10,11 +9,10 @@ public class GroupSimulator(
     IStandingsCalculator standingsCalculator)
     : IGroupSimulator
 {
-    public SimulationResult Simulate(IReadOnlyList<Team> teams, GroupConfiguration config)
+    public Result<SimulationResult> Simulate(IReadOnlyList<Team> teams, GroupConfiguration config)
     {
-        // TODO: Control flow with exception. Should be replaced with proper result wrapper. Take Ardalis, for example
         if (teams.Count != config.TeamCount)
-            throw new BadRequestException($"Expected {config.TeamCount} teams, got {teams.Count}.");
+            return Result<SimulationResult>.Failure($"Expected {config.TeamCount} teams, got {teams.Count}.");
 
         var schedule = scheduleGenerator.Generate(teams);
 
@@ -28,6 +26,6 @@ public class GroupSimulator(
         var standings = standingsCalculator.Calculate(teams, allMatches);
         var qualifiedTeamNames = standings.Take(config.QualifierCount).Select(s => s.Team).ToList();
 
-        return new SimulationResult(roundsPlayed, standings, qualifiedTeamNames);
+        return Result<SimulationResult>.Success(new SimulationResult(roundsPlayed, standings, qualifiedTeamNames));
     }
 }

@@ -18,3 +18,7 @@ StageSim.Domain/bin/
 StageSim.Infrastructure/bin/
 
 *.user
+
+StageSim.UnitTests/bin/
+
+StageSim.UnitTests/obj/
