@@ -1,0 +1,63 @@
+@baseUrl = http://localhost:7000
+
+### Simulate group with balanced teams
+POST {{baseUrl}}/groups/simulate
+Content-Type: application/json
+
+{
+  "teams": [
+    { "name": "Brazil", "strength": 85 },
+    { "name": "Argentina", "strength": 82 },
+    { "name": "France", "strength": 88 },
+    { "name": "Germany", "strength": 78 }
+  ]
+}
+
+### Simulate group with one dominant team
+POST {{baseUrl}}/groups/simulate
+Content-Type: application/json
+
+{
+  "teams": [
+    { "name": "Manchester City", "strength": 95 },
+    { "name": "Burnley", "strength": 40 },
+    { "name": "Luton", "strength": 35 },
+    { "name": "Sheffield United", "strength": 38 }
+  ]
+}
+
+### Simulate group with equal strength (coin flip outcomes)
+POST {{baseUrl}}/groups/simulate
+Content-Type: application/json
+
+{
+  "teams": [
+    { "name": "Team A", "strength": 50 },
+    { "name": "Team B", "strength": 50 },
+    { "name": "Team C", "strength": 50 },
+    { "name": "Team D", "strength": 50 }
+  ]
+}
+
+### Validation: wrong team count
+POST {{baseUrl}}/groups/simulate
+Content-Type: application/json
+
+{
+  "teams": [
+    { "name": "Only Team", "strength": 70 }
+  ]
+}
+
+### Validation: invalid strength
+POST {{baseUrl}}/groups/simulate
+Content-Type: application/json
+
+{
+  "teams": [
+    { "name": "Team A", "strength": 0 },
+    { "name": "Team B", "strength": 50 },
+    { "name": "Team C", "strength": 50 },
+    { "name": "Team D", "strength": 50 }
+  ]
+}

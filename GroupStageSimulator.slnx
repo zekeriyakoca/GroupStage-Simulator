@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/Test/">
+    <Project Path="StageSim.UnitTests\StageSim.UnitTests.csproj" Type="Classic C#" />
+  </Folder>
+  <Project Path="StageSim.API/StageSim.API.csproj" />
+  <Project Path="StageSim.Domain\StageSim.Domain.csproj" Type="Classic C#" />
+  <Project Path="StageSim.Infrastructure\StageSim.Infrastructure.csproj" Type="Classic C#" />
+</Solution>

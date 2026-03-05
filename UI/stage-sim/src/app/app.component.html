@@ -1,0 +1,133 @@
+<div class="min-h-screen bg-slate-950 text-slate-100">
+
+  <header class="bg-slate-900 border-b border-slate-800">
+    <div class="max-w-4xl mx-auto px-6 py-5 flex items-center gap-3">
+      <span class="text-3xl">⚽</span>
+      <div>
+        <h1 class="text-xl font-bold tracking-tight">Group Stage Simulator</h1>
+        <p class="text-sm text-slate-400">Configure 4 teams and simulate the group standings</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-6 py-8 space-y-6">
+
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-4">
+      <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-widest">Teams</h2>
+
+      @for (team of teams; track team; let i = $index) {
+        <div class="flex items-center gap-4">
+          <span class="w-7 h-7 rounded-full bg-slate-700 text-slate-300 text-xs font-bold flex items-center justify-center flex-shrink-0">
+            {{ i + 1 }}
+          </span>
+          <input
+            type="text"
+            [(ngModel)]="team.name"
+            placeholder="Team name"
+            class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:border-emerald-600 transition-colors"
+          />
+          <div class="flex items-center gap-3 min-w-44">
+            <input type="range" min="1" max="100" [(ngModel)]="team.strength" class="w-full" />
+            <span class="text-sm font-mono text-emerald-400 w-8 text-right tabular-nums">{{ team.strength }}</span>
+          </div>
+        </div>
+      }
+
+      <button
+        (click)="simulate()"
+        [disabled]="loading"
+        class="w-full mt-2 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-sm transition-colors"
+      >
+        @if (loading) { Simulating... } @else { Simulate }
+      </button>
+
+      @if (error) {
+        <p class="text-sm text-red-400 text-center pt-1">{{ error }}</p>
+      }
+    </div>
+
+    @if (result) {
+
+      <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+          <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-widest">Standings</h2>
+          <span class="text-xs text-slate-500">Top 2 advance</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-xs text-slate-500 border-b border-slate-800">
+                <th class="px-4 py-3 text-left w-10">#</th>
+                <th class="px-4 py-3 text-left">Team</th>
+                <th class="px-4 py-3 text-center w-10">P</th>
+                <th class="px-4 py-3 text-center w-10">W</th>
+                <th class="px-4 py-3 text-center w-10">D</th>
+                <th class="px-4 py-3 text-center w-10">L</th>
+                <th class="px-4 py-3 text-center w-12">GF</th>
+                <th class="px-4 py-3 text-center w-12">GA</th>
+                <th class="px-4 py-3 text-center w-12">GD</th>
+                <th class="px-4 py-3 text-center w-12 font-semibold text-slate-400">Pts</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (standing of result.standings; track standing.team.id; let i = $index, last = $last) {
+                <tr [class]="rowClass(i)">
+                  <td class="px-4 py-3">
+                    <span class="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center" [class]="positionBadgeClass(i)">
+                      {{ i + 1 }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 font-medium">
+                    <div class="flex items-center gap-2">
+                      {{ standing.team.name }}
+                      @if (i < 2) {
+                        <span class="text-xs bg-emerald-900 text-emerald-400 px-1.5 py-0.5 rounded">Q</span>
+                      }
+                    </div>
+                  </td>
+                  <td class="px-4 py-3 text-center text-slate-400">{{ standing.played }}</td>
+                  <td class="px-4 py-3 text-center text-slate-300">{{ standing.won }}</td>
+                  <td class="px-4 py-3 text-center text-slate-400">{{ standing.drawn }}</td>
+                  <td class="px-4 py-3 text-center text-slate-400">{{ standing.lost }}</td>
+                  <td class="px-4 py-3 text-center text-slate-300">{{ standing.goalsFor }}</td>
+                  <td class="px-4 py-3 text-center text-slate-400">{{ standing.goalsAgainst }}</td>
+                  <td class="px-4 py-3 text-center font-mono text-sm" [class]="gdClass(standing.goalDifference)">
+                    {{ standing.goalDifference > 0 ? '+' : '' }}{{ standing.goalDifference }}
+                  </td>
+                  <td class="px-4 py-3 text-center font-bold text-slate-100">{{ standing.points }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        @for (round of result.rounds; track round.number) {
+          <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+            <div class="px-4 py-3 border-b border-slate-800">
+              <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-widest">Round {{ round.number }}</h3>
+            </div>
+            <div class="p-4 space-y-3">
+              @for (match of round.matches; track match) {
+                <div class="flex items-center gap-2 text-sm">
+                  <span class="flex-1 text-right truncate" [class]="matchTeamClass(match.isHomeWin)">
+                    {{ match.home.name }}
+                  </span>
+                  <span class="flex-shrink-0 bg-slate-800 border border-slate-700 rounded px-2.5 py-1 font-mono font-bold text-xs text-slate-200 tabular-nums">
+                    {{ match.homeGoals }}&ndash;{{ match.awayGoals }}
+                  </span>
+                  <span class="flex-1 truncate" [class]="matchTeamClass(match.isAwayWin)">
+                    {{ match.away.name }}
+                  </span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+    }
+
+  </main>
+</div>
