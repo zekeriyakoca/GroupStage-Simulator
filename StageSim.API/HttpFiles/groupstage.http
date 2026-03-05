@@ -13,6 +13,41 @@ Content-Type: application/json
   ]
 }
 
+> {%
+client.test("returns 200", function () {
+    client.assert(response.status === 200, "Expected 200");
+});
+client.test("has 3 rounds", function () {
+    client.assert(response.body.rounds.length === 3, "Expected 3 rounds");
+});
+client.test("each round has 2 matches", function () {
+    response.body.rounds.forEach(function (r) {
+        client.assert(r.matches.length === 2, "Expected 2 matches per round");
+    });
+});
+client.test("has 4 standings", function () {
+    client.assert(response.body.standings.length === 4, "Expected 4 standings");
+});
+client.test("exactly 2 teams qualify", function () {
+    var qualified = response.body.standings.filter(function (s) { return s.qualified; });
+    client.assert(qualified.length === 2, "Expected 2 qualified teams");
+});
+client.test("standings are ordered by position", function () {
+    var positions = response.body.standings.map(function (s) { return s.position; });
+    client.assert(JSON.stringify(positions) === JSON.stringify([1, 2, 3, 4]), "Expected positions 1-4");
+});
+client.test("each team played 3 matches", function () {
+    response.body.standings.forEach(function (s) {
+        client.assert(s.played === 3, "Each team should play 3 matches");
+    });
+});
+client.test("won + drawn + lost equals played", function () {
+    response.body.standings.forEach(function (s) {
+        client.assert(s.won + s.drawn + s.lost === s.played, "W+D+L should equal played");
+    });
+});
+%}
+
 ### Simulate group with one dominant team
 POST {{baseUrl}}/groups/simulate
 Content-Type: application/json
@@ -25,6 +60,26 @@ Content-Type: application/json
     { "name": "Sheffield United", "strength": 38 }
   ]
 }
+
+> {%
+client.test("returns 200", function () {
+    client.assert(response.status === 200, "Expected 200");
+});
+client.test("goals are never negative", function () {
+    response.body.rounds.forEach(function (r) {
+        r.matches.forEach(function (m) {
+            client.assert(m.homeGoals >= 0, "Home goals should not be negative");
+            client.assert(m.awayGoals >= 0, "Away goals should not be negative");
+        });
+    });
+});
+client.test("qualified flag is set on top 2 only", function () {
+    var qualified = response.body.standings.filter(function (s) { return s.qualified; });
+    client.assert(qualified.length === 2, "Expected exactly 2 qualified");
+    client.assert(qualified[0].position === 1, "Position 1 should be qualified");
+    client.assert(qualified[1].position === 2, "Position 2 should be qualified");
+});
+%}
 
 ### Simulate group with equal strength (coin flip outcomes)
 POST {{baseUrl}}/groups/simulate
@@ -39,6 +94,23 @@ Content-Type: application/json
   ]
 }
 
+> {%
+client.test("returns 200", function () {
+    client.assert(response.status === 200, "Expected 200");
+});
+client.test("total goals across all matches are non-negative", function () {
+    var totalGoals = response.body.rounds.reduce(function (sum, r) {
+        return sum + r.matches.reduce(function (s, m) { return s + m.homeGoals + m.awayGoals; }, 0);
+    }, 0);
+    client.assert(totalGoals >= 0, "Total goals should be non-negative");
+});
+client.test("all teams have same strength in response", function () {
+    response.body.standings.forEach(function (s) {
+        client.assert(s.team.strength === 50, "All teams should have strength 50");
+    });
+});
+%}
+
 ### Validation: wrong team count
 POST {{baseUrl}}/groups/simulate
 Content-Type: application/json
@@ -48,6 +120,12 @@ Content-Type: application/json
     { "name": "Only Team", "strength": 70 }
   ]
 }
+
+> {%
+client.test("returns 400", function () {
+    client.assert(response.status === 400, "Expected 400 for wrong team count");
+});
+%}
 
 ### Validation: invalid strength
 POST {{baseUrl}}/groups/simulate
@@ -61,3 +139,9 @@ Content-Type: application/json
     { "name": "Team D", "strength": 50 }
   ]
 }
+
+> {%
+client.test("returns 400", function () {
+    client.assert(response.status === 400, "Expected 400 for invalid strength");
+});
+%}
