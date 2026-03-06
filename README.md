@@ -33,6 +33,10 @@ API available at `https://lontray.art/stagesim/groups/simulate`.
 - **Frontend:** https://gray-mushroom-0dfd13410.2.azurestaticapps.net
 - **API (Swagger):** https://lontray.art/stagesim/swagger
 
+## API tests
+
+HTTP test file available at `StageSim.API/HttpFiles/groupstage.http` (compatible with JetBrains Rider / VS Code REST Client).
+
 ## Run tests
 
 ```bash
